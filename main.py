@@ -1,34 +1,30 @@
 from selenium import webdriver
-from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 import time
-import random
-import pprint
+from openpyxl import Workbook
 
-
+# Настройка драйвера и переход на нужную страницу
 browser = webdriver.Chrome()
-browser.get('https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0')
-#assert 'Википедия' in browser.title
-# time.sleep(5)
-#
-# search_box = browser.find_element(By.ID,"searchInput")
-# search_box.send_keys("Солнечная система" + Keys.RETURN)
-# time.sleep(5)
-#
-# a = browser.find_element(By.LINK_TEXT, "Солнечная система")
-# browser.quit()
+browser.get('https://phdays.com/forum/program/?date=2024%2F5%2F23&filterType=location')
+time.sleep(5)  # Даем время для полной загрузки страницы
 
-hatnotes = []
+# Находим все элементы с нужным классом
+doclades = []
 for element in browser.find_elements(By.TAG_NAME, "div"):
-#Чтобы искать атрибут класса
     cl = element.get_attribute("class")
-    if cl == "hatnote navigation-not-searchable":
-        hatnotes.append(element)
+    if cl and "TalkCard_content-area" in cl:
+        doclades.append(element.text)
 
-#print(hatnotes)
-if hatnotes:
-    hatnote = random.choice(hatnotes)
-    link = hatnote.find_element(By.TAG_NAME, "a").get_attribute("href")
-    browser.get(link)
-else:
-    print("No hatnotes found on the page.")
+# Создаем новую книгу Excel
+wb = Workbook()
+ws = wb.active
+
+# Записываем данные в первый столбец
+for idx, doclade in enumerate(doclades, 1):
+    ws[f'A{idx}'] = doclade
+
+# Сохраняем книгу
+wb.save("doclades.xlsx")
+
+# Закрываем браузер
+browser.quit()
