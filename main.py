@@ -1,34 +1,58 @@
 from selenium import webdriver
-from selenium.webdriver import Keys
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import time
-import random
-import pprint
 
+def search_wikipedia(query):
+    # Настраиваем драйвер браузера
+    driver = webdriver.Chrome()
+    driver.get("https://ru.wikipedia.org")
 
-browser = webdriver.Chrome()
-browser.get('https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0')
-#assert 'Википедия' in browser.title
-# time.sleep(5)
-#
-# search_box = browser.find_element(By.ID,"searchInput")
-# search_box.send_keys("Солнечная система" + Keys.RETURN)
-# time.sleep(5)
-#
-# a = browser.find_element(By.LINK_TEXT, "Солнечная система")
-# browser.quit()
+    # Вводим запрос в поисковую строку
+    search_input = driver.find_element(By.NAME, "search")
+    search_input.send_keys(query)
+    search_input.send_keys(Keys.RETURN)
 
-hatnotes = []
-for element in browser.find_elements(By.TAG_NAME, "div"):
-#Чтобы искать атрибут класса
-    cl = element.get_attribute("class")
-    if cl == "hatnote navigation-not-searchable":
-        hatnotes.append(element)
+    # Ждем загрузки страницы
+    time.sleep(2)
 
-#print(hatnotes)
-if hatnotes:
-    hatnote = random.choice(hatnotes)
-    link = hatnote.find_element(By.TAG_NAME, "a").get_attribute("href")
-    browser.get(link)
-else:
-    print("No hatnotes found on the page.")
+    while True:
+        # Получаем список параграфов
+        paragraphs = driver.find_elements(By.CSS_SELECTOR, 'div.mw-parser-output > p')
+        # Действия пользователя
+        print("\nЧто вы хотите сделать далее?")
+        print("1: Просмотреть параграфы текущей статьи")
+        print("2: Перейти на связанную страницу")
+        print("3: Выйти из программы")
+        choice = input("Введите ваш выбор (1, 2 или 3): ")
+
+        if choice == '1':
+            # Печатаем параграфы
+            for i, paragraph in enumerate(paragraphs):
+                print(f"\nПараграф {i+1}:")
+                print(paragraph.text)
+        elif choice == '2':
+            # Получаем связанные статьи
+            links = driver.find_elements(By.CSS_SELECTOR, "div.mw-parser-output > p > a")
+            print("\nДоступные связанные статьи:")
+            for i, link in enumerate(links):
+                print(f"{i+1}: {link.get_attribute('title')}")
+
+            link_choice = int(input("Выберите статью для перехода: ")) - 1
+            if 0 <= link_choice < len(links):
+                links[link_choice].click()
+                time.sleep(2)
+            else:
+                print("Неверный выбор.")
+        elif choice == '3':
+            print("Выход из программы...")
+            break
+        else:
+            print("Неверный ввод. Пожалуйста, введите 1, 2 или 3.")
+
+    driver.quit()
+
+# Начало программы
+if __name__ == "__main__":
+    initial_query = input("Введите ваш запрос для поиска на Википедии: ")
+    search_wikipedia(initial_query)
