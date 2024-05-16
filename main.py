@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
@@ -49,5 +48,3 @@ wb.save("doclades.xlsx")
 
 # Закрываем браузер
 browser.quit()
-=======
->>>>>>> parent of c749275 (ok)
