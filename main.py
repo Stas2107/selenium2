@@ -1,58 +1,53 @@
+<<<<<<< HEAD
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import time
+from openpyxl import Workbook
 
-def search_wikipedia(query):
-    # Настраиваем драйвер браузера
-    driver = webdriver.Chrome()
-    driver.get("https://ru.wikipedia.org")
 
-    # Вводим запрос в поисковую строку
-    search_input = driver.find_element(By.NAME, "search")
-    search_input.send_keys(query)
-    search_input.send_keys(Keys.RETURN)
+def read_tags_from_file(filename):
+    with open(filename, 'r', encoding='utf-8') as file:
+        tags = [line.strip() for line in file.readlines()]
+    return tags
 
-    # Ждем загрузки страницы
-    time.sleep(2)
 
-    while True:
-        # Получаем список параграфов
-        paragraphs = driver.find_elements(By.CSS_SELECTOR, 'div.mw-parser-output > p')
-        # Действия пользователя
-        print("\nЧто вы хотите сделать далее?")
-        print("1: Просмотреть параграфы текущей статьи")
-        print("2: Перейти на связанную страницу")
-        print("3: Выйти из программы")
-        choice = input("Введите ваш выбор (1, 2 или 3): ")
+def scrape_data(browser, tags):
+    data = {tag: [] for tag in tags}
 
-        if choice == '1':
-            # Печатаем параграфы
-            for i, paragraph in enumerate(paragraphs):
-                print(f"\nПараграф {i+1}:")
-                print(paragraph.text)
-        elif choice == '2':
-            # Получаем связанные статьи
-            links = driver.find_elements(By.CSS_SELECTOR, "div.mw-parser-output > p > a")
-            print("\nДоступные связанные статьи:")
-            for i, link in enumerate(links):
-                print(f"{i+1}: {link.get_attribute('title')}")
+    for element in browser.find_elements(By.TAG_NAME, "div"):
+        cl = element.get_attribute("class")
+        for tag in tags:
+            if cl and tag in cl:
+                data[tag].append(element.text)
+                break
+    return data
 
-            link_choice = int(input("Выберите статью для перехода: ")) - 1
-            if 0 <= link_choice < len(links):
-                links[link_choice].click()
-                time.sleep(2)
-            else:
-                print("Неверный выбор.")
-        elif choice == '3':
-            print("Выход из программы...")
-            break
-        else:
-            print("Неверный ввод. Пожалуйста, введите 1, 2 или 3.")
 
-    driver.quit()
+# Настройка драйвера и переход на нужную страницу
+browser = webdriver.Chrome()
+browser.get('https://phdays.com/forum/program/?date=2024%2F5%2F23')
+time.sleep(20)  # Даем время для полной загрузки страницы
 
-# Начало программы
-if __name__ == "__main__":
-    initial_query = input("Введите ваш запрос для поиска на Википедии: ")
-    search_wikipedia(initial_query)
+# Чтение тегов из файла
+tags = read_tags_from_file('tegs.txt')
+
+# Скрапинг данных
+data = scrape_data(browser, tags)
+
+# Создаем новую книгу Excel
+wb = Workbook()
+ws = wb.active
+
+# Записываем данные в столбцы Excel
+for idx, (tag, values) in enumerate(data.items(), 1):
+    ws[f'{chr(64 + idx)}1'] = tag  # Записываем имя тега в заголовок столбца
+    for row_idx, value in enumerate(values, 2):  # Начинаем с 2-ой строки, так как 1-я строка под заголовки
+        ws[f'{chr(64 + idx)}{row_idx}'] = value
+
+# Сохраняем книгу
+wb.save("doclades.xlsx")
+
+# Закрываем браузер
+browser.quit()
+=======
+>>>>>>> parent of c749275 (ok)
